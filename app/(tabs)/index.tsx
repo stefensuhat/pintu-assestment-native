@@ -1,11 +1,10 @@
+import BaseLayout from '@/components/ui/base-layout'
 import SearchInput from '@/components/ui/search-input'
 import TableLists from '@/components/ui/table-lists'
 import { useFocusNotifyOnChangeProps } from '@/hooks/useFocusNotifyOnChangeProps'
 import { useGetCryptoList } from '@/services/crypto'
-import { StatusBar } from 'expo-status-bar'
 import { useState } from 'react'
-import { FlatList, RefreshControl, ScrollView } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { FlatList, RefreshControl } from 'react-native'
 
 export default function HomeScreen() {
 	const [search, setSearch] = useState('')
@@ -18,8 +17,7 @@ export default function HomeScreen() {
 	})
 
 	return (
-		<SafeAreaView className="px-4 bg-primary h-full space-y-4">
-			<StatusBar style="light" animated />
+		<BaseLayout>
 			<FlatList
 				data={query.data}
 				refreshControl={<RefreshControl refreshing={query.isFetching} onRefresh={query.refetch} />}
@@ -27,6 +25,6 @@ export default function HomeScreen() {
 				keyExtractor={(item) => item.name}
 				ListHeaderComponent={<SearchInput search={search} setSearch={setSearch} />}
 			/>
-		</SafeAreaView>
+		</BaseLayout>
 	)
 }

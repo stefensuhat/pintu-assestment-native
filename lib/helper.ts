@@ -1,5 +1,9 @@
-export function currencyFormat(num: number) {
-	return `Rp. ${num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`
+export function currencyFormat(num: number, hidePrefix = false) {
+	if (!hidePrefix) {
+		return `Rp. ${num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`
+	}
+
+	return `${num.toFixed(0).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}`
 }
 
 export function convertToInternationalCurrencySystem(labelValue: number) {

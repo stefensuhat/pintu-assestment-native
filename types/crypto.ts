@@ -9,4 +9,7 @@ export interface CryptoDataInterface {
 	fully_diluted_valuation: number
 	price_change_24h: number
 	price_change_percentage_24h: number
+	total_volume: number
+	high_24h: number
+	low_24h: number
 }

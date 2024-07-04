@@ -10,7 +10,7 @@ type TableListProps = {
 
 export default function TableLists({ item }: TableListProps) {
 	const handleItemClick = () => {
-		router.push(`/trade?crypto=${item.id}`)
+		router.push(`/${item.id}`)
 	}
 
 	return (
