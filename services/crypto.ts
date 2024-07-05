@@ -1,10 +1,12 @@
+import historicalData from '@/services/historical.json'
 import data from '@/services/response.json'
-import type { CryptoDataInterface } from '@/types/crypto'
+import type { CryptoDataInterface, CryptoHistoricalDataInterface } from '@/types/crypto'
 import { type UseQueryOptions, useQuery } from '@tanstack/react-query'
 
 const keys = {
 	list: ['crypto', 'list'],
 	detail: ['crypto', 'detail'],
+	historical: ['crypto', 'historical'],
 }
 
 export const useGetCryptoList = ({ search, options }: { search: string; options?: UseQueryOptions }) => {
@@ -38,9 +40,30 @@ export const useGetCryptoDetail = (cryptoId: string) => {
 
 				setTimeout(() => {
 					return resolve(findCrypto)
-				}, 2000)
+				}, 0)
 			})
 		},
 		retry: 1,
+	})
+}
+
+export const useGetHistoricalData = (cryptoId: string) => {
+	return useQuery({
+		queryKey: [...keys.historical, cryptoId],
+		queryFn: async (): Promise<[number, number, number, number, number][]> => {
+			//TODO: replace with real fetch
+			return await new Promise((resolve) => {
+				setTimeout(() => {
+					return resolve(historicalData)
+				}, 0)
+			})
+		},
+		retry: 1,
+		select: (data) => {
+			return data.map((item) => {
+				return { timestamp: item[0], open: item[1], high: item[2], low: item[3], close: item[4] }
+			})
+		},
+		initialData: [],
 	})
 }
