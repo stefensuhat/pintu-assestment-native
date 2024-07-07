@@ -1,7 +1,7 @@
 import { StatusBar } from 'expo-status-bar'
-import { Animated } from 'react-native'
+import { styled } from 'nativewind'
+import { Animated, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import ScrollView = Animated.ScrollView
 
 export default function BaseLayout({ children }: { children: React.ReactNode }) {
 	return (
@@ -12,3 +12,6 @@ export default function BaseLayout({ children }: { children: React.ReactNode }) 
 		</SafeAreaView>
 	)
 }
+
+export const StyledView = styled(View)
+export const StyledText = styled(Text)

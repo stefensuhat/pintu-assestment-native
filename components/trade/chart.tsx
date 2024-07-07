@@ -18,11 +18,9 @@ const types = ['open', 'high', 'low', 'close']
 
 export default function Chart() {
 	const query = useGetHistoricalData('bitcoin')
-	const { currentX, currentY, data, domain, step } = CandlestickChart.useChart()
 
-	console.log(currentX, currentY, data, domain, step)
 	return (
-		<View>
+		<StyledView>
 			{query.data && (
 				<StyledView className="h-fit overflow-scroll border border-gray-600 rounded-lg">
 					<GestureHandlerRootView>
@@ -35,7 +33,13 @@ export default function Chart() {
 								</CandlestickChart.Crosshair>
 
 								<StyledView className="flex">
-									<CandlestickChart.DatetimeText className="p-2 text-xs text-white" />
+									<CandlestickChart.DatetimeText
+										style={{
+											padding: 8,
+											fontSize: 12,
+											color: 'white',
+										}}
+									/>
 
 									<StyledView className="flex flex-row items-center py-2 justify-center border-t border-gray-600">
 										{types.map((type) => (
@@ -43,7 +47,11 @@ export default function Chart() {
 												<StyledText className="text-white text-xs text-center capitalize">{type}</StyledText>
 												<CandlestickChart.PriceText
 													type={type as TPriceType}
-													className="text-white text-xs text-center"
+													style={{
+														color: 'white',
+														fontSize: 12,
+														textAlign: 'center',
+													}}
 												/>
 											</StyledView>
 										))}
@@ -54,12 +62,6 @@ export default function Chart() {
 					</GestureHandlerRootView>
 				</StyledView>
 			)}
-		</View>
+		</StyledView>
 	)
 }
-
-const DATA = Array.from({ length: 31 }, (_, i) => ({
-	day: i,
-	lowTmp: 20 + 10 * Math.random(),
-	highTmp: 40 + 30 * Math.random(),
-}))

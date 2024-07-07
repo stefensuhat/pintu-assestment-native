@@ -1,4 +1,5 @@
 import Chart from '@/components/trade/chart'
+import Trading from '@/components/trade/trading'
 import Volume from '@/components/trade/volume'
 import BaseLayout from '@/components/ui/base-layout'
 import Loader from '@/components/ui/loader'
@@ -25,7 +26,7 @@ export default function TradeScreen() {
 
 	return (
 		<BaseLayout>
-			<ScrollView>
+			<ScrollView showsVerticalScrollIndicator={false}>
 				{isLoading && <Loader isLoading={isLoading} />}
 
 				{data && (
@@ -50,15 +51,11 @@ export default function TradeScreen() {
 							<Volume data={data} />
 						</StyledView>
 
-						<StyledView>
-							<Chart data={data} />
-						</StyledView>
+						<Chart />
 
-						<StyledView>
-							<Text className={`${data.price_change_24h < 0 ? 'text-red-500' : 'text-green-500'} font-bold`}>
-								{currencyFormat(data.price_change_24h, true)} ({data.price_change_percentage_24h}%)
-							</Text>
-						</StyledView>
+						<StyledView className="border-2 border-gray-600 rounded-lg my-4" />
+
+						<Trading />
 					</StyledView>
 				)}
 			</ScrollView>
