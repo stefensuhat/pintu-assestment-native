@@ -1,3 +1,4 @@
+import { useCryptoContext } from '@/components/crypto-context'
 import { useGetHistoricalData } from '@/services/crypto'
 import * as haptics from 'expo-haptics'
 import { styled } from 'nativewind'
@@ -17,16 +18,18 @@ function invokeHaptic() {
 const types = ['open', 'high', 'low', 'close']
 
 export default function Chart() {
-	const query = useGetHistoricalData('bitcoin')
+	const { data } = useCryptoContext()
+
+	const query = useGetHistoricalData(data.id)
 
 	return (
 		<StyledView>
-			{query.data && (
-				<StyledView className="h-fit overflow-scroll border border-gray-600 rounded-lg">
+			{query.isLoading ? null : query.data ? (
+				<StyledView className="h-fit rounded-lg overflow-hidden">
 					<GestureHandlerRootView>
 						<CandlestickChart.Provider data={query.data}>
-							<CandlestickChart>
-								<CandlestickChart.Candles height={300} />
+							<CandlestickChart className="p-0">
+								<CandlestickChart.Candles height={400} />
 
 								<CandlestickChart.Crosshair onCurrentXChange={invokeHaptic}>
 									<CandlestickChart.Tooltip />
@@ -61,7 +64,7 @@ export default function Chart() {
 						</CandlestickChart.Provider>
 					</GestureHandlerRootView>
 				</StyledView>
-			)}
+			) : null}
 		</StyledView>
 	)
 }

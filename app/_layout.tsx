@@ -1,4 +1,5 @@
 import '../global.css'
+import { AppContextProvider } from '@/components/app-context'
 import { useColorScheme } from '@/hooks/useColorScheme'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Stack } from 'expo-router'
@@ -10,10 +11,12 @@ export default function RootLayout() {
 
 	return (
 		<QueryClientProvider client={queryClient}>
-			<Stack>
-				<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-				<Stack.Screen name="+not-found" />
-			</Stack>
+			<AppContextProvider>
+				<Stack>
+					<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+					<Stack.Screen name="+not-found" />
+				</Stack>
+			</AppContextProvider>
 		</QueryClientProvider>
 	)
 }

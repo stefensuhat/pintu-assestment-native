@@ -1,12 +1,14 @@
-import historicalData from '@/services/historical.json'
+import request from '@/lib/request'
+import { supabase } from '@/lib/supabase'
 import data from '@/services/response.json'
-import type { CryptoDataInterface, CryptoHistoricalDataInterface } from '@/types/crypto'
+import type { CryptoDataInterface } from '@/types/crypto'
 import { type UseQueryOptions, useQuery } from '@tanstack/react-query'
 
 const keys = {
 	list: ['crypto', 'list'],
 	detail: ['crypto', 'detail'],
 	historical: ['crypto', 'historical'],
+	orderBooks: ['crypto', 'orderBooks'],
 }
 
 export const useGetCryptoList = ({ search, options }: { search: string; options?: UseQueryOptions }) => {
@@ -14,13 +16,10 @@ export const useGetCryptoList = ({ search, options }: { search: string; options?
 		...options,
 		queryKey: keys.list,
 		queryFn: async (): Promise<CryptoDataInterface[]> => {
-			// const response = await request.get('/coins/markets', { params: { vs_currency: 'usd' } })
-
-			// return response
-			//TODO: replace with real fetch
-			return await Promise.resolve(data)
+			return await request.get('/coins/markets', { params: { vs_currency: 'idr' } })
 		},
 		retry: 1,
+		// @ts-ignore
 		select: (data: CryptoDataInterface[]) => {
 			if (search === '') return data
 
@@ -51,11 +50,8 @@ export const useGetHistoricalData = (cryptoId: string) => {
 	return useQuery({
 		queryKey: [...keys.historical, cryptoId],
 		queryFn: async (): Promise<[number, number, number, number, number][]> => {
-			//TODO: replace with real fetch
-			return await new Promise((resolve) => {
-				setTimeout(() => {
-					return resolve(historicalData)
-				}, 0)
+			return await request.get(`/coins/${cryptoId}/ohlc`, {
+				params: { vs_currency: 'usd', days: '7', precision: '2' },
 			})
 		},
 		retry: 1,
@@ -65,5 +61,32 @@ export const useGetHistoricalData = (cryptoId: string) => {
 			})
 		},
 		initialData: [],
+	})
+}
+
+export const useGetOrderBooks = (asset: string, key: number) => {
+	return useQuery({
+		queryKey: [...keys.orderBooks, asset, key],
+		queryFn: async () => {
+			const { data: buyBooks } = await supabase
+				.from('order_books')
+				.select('*')
+				.gt('quantity', 0)
+				.eq('order_type', 'buy')
+				.order('id', { ascending: false })
+				.limit(7)
+
+			const { data: sellBooks } = await supabase
+				.from('order_books')
+				.select('*')
+				.gt('quantity', 0)
+				.eq('order_type', 'sell')
+				.order('price', { ascending: false })
+				.limit(7)
+
+			return { buyBooks, sellBooks }
+		},
+		retry: 1,
+		refetchInterval: false,
 	})
 }

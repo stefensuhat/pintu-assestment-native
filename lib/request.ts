@@ -14,8 +14,6 @@ const fetch = axios.create({
 
 fetch.interceptors.request.use(
 	(config) => {
-		console.log('config: ', config)
-
 		return config
 	},
 	(error) => {
@@ -28,7 +26,7 @@ fetch.interceptors.response.use(
 		return response.data
 	},
 	(error) => {
-		console.log('error: ', error)
+		console.log('error: ', error.response.data)
 
 		return Promise.reject(error.response.data)
 	},

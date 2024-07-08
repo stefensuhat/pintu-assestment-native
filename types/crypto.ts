@@ -13,3 +13,12 @@ export interface CryptoDataInterface {
 	high_24h: number
 	low_24h: number
 }
+
+export interface OrderBookInterface {
+	id: number
+	user_id: string
+	asset: string
+	price: number
+	quantity: number
+	order_type: 'buy' | 'sell'
+}

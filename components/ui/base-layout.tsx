@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 
 export default function BaseLayout({ children }: { children: React.ReactNode }) {
 	return (
-		<SafeAreaView className="px-4 space-y-4 h-full bg-primary">
+		<SafeAreaView className="h-full bg-primary">
 			<StatusBar style="light" animated />
 
 			{children}

@@ -1,5 +1,10 @@
+import { useCryptoContext } from '@/components/crypto-context'
 import { StyledText } from '@/components/ui/base-layout'
 import { currencyFormat } from '@/lib/helper'
+import { supabase } from '@/lib/supabase'
+import { useGetOrderBooks } from '@/services/crypto'
+import type { RealtimeChannel } from '@supabase/realtime-js'
+import { useEffect, useState } from 'react'
 import { Text, type TextProps, View, type ViewProps } from 'react-native'
 
 const Cell = (props: TextProps) => {
@@ -18,47 +23,61 @@ const Heading = (props: TextProps) => {
 	return <StyledText className="flex-1 text-white  text-[11px] font-semibold" {...props} />
 }
 
-const sellBooks = [
-	{ price: 900000000, amount: 0.00092 },
-	{ price: 1000000001, amount: 0.00092 },
-	{ price: 1000000002, amount: 0.00092 },
-	{ price: 1000000003, amount: 0.00092 },
-	{ price: 1000000004, amount: 0.00092 },
-	{ price: 1000000005, amount: 0.00092 },
-	{ price: 1000000006, amount: 0.00092 },
-]
-
-const buyBooks = [
-	{ price: 1000000000, amount: 0.00092 },
-	{ price: 1000000001, amount: 0.00092 },
-	{ price: 1000000002, amount: 0.00092 },
-	{ price: 1000000003, amount: 0.00092 },
-	{ price: 1000000004, amount: 0.00092 },
-	{ price: 1000000005, amount: 0.00092 },
-	{ price: 1000000006, amount: 0.00092 },
-]
-
 export default function OrderBook() {
+	let channel: RealtimeChannel | null = null
+	const { data: crypto } = useCryptoContext()
+
+	const [key, setKey] = useState(0)
+	const { data, refetch } = useGetOrderBooks(crypto.id, key)
+
+	useEffect(() => {
+		subscribeOrderBooks()
+
+		return () => {
+			if (channel) {
+				supabase.removeChannel(channel)
+			}
+		}
+	}, [channel])
+
+	const handleNewOrder = async () => {
+		setKey(key + 1)
+
+		await refetch()
+	}
+
+	const subscribeOrderBooks = () => {
+		if (!channel) {
+			channel = supabase
+				.channel('orderBooks')
+				.on('postgres_changes', { event: '*', schema: 'public', table: 'order_books' }, async () => {
+					await handleNewOrder()
+				})
+				.subscribe()
+		}
+	}
+
 	return (
 		<View className="border-2 border-gray-600 rounded-lg p-1">
 			<Header>
 				<Heading>Price{'\n'}(IDR)</Heading>
 				<Heading className="text-right">Amount{'\n'}(BTC)</Heading>
 			</Header>
-			{sellBooks.map((book, index) => (
+
+			{data?.sellBooks?.map((book) => (
 				<Row className="flex-row justify-between" key={book.price}>
-					<Cell>{currencyFormat(book.price, true)}</Cell>
-					<Cell className="text-right">{book.amount}</Cell>
+					<Cell className="text-red-500">{currencyFormat(book.price, true)}</Cell>
+					<Cell className="text-right text-red-500">{book.quantity}</Cell>
 				</Row>
 			))}
 
 			<View className="border-2 border-l-0 border-r-0 border-gray-600 p-1">
 				<Text className="text-green-500 font-bold">{currencyFormat(1000000000, true)}</Text>
 			</View>
-			{buyBooks.map((book, index) => (
-				<Row className="flex-row justify-between" key={book.price}>
-					<Cell>{currencyFormat(book.price, true)}</Cell>
-					<Cell className="text-right">{book.amount}</Cell>
+			{data?.buyBooks?.map((book) => (
+				<Row className="flex-row justify-between" key={book.id}>
+					<Cell className="text-green-500">{currencyFormat(book.price, true)}</Cell>
+					<Cell className="text-right text-green-500">{book.quantity}</Cell>
 				</Row>
 			))}
 		</View>
