@@ -1,15 +1,27 @@
+import { useAppContext } from '@/components/app-context'
 import { useCryptoContext } from '@/components/crypto-context'
 import Chart from '@/components/trade/chart'
 import Trading from '@/components/trade/trading'
 import Volume from '@/components/trade/volume'
 import { StyledView } from '@/components/ui/base-layout'
 import { currencyFormat } from '@/lib/helper'
+import { useAddCryptoBalance } from '@/services/crypto'
+import { useEffect } from 'react'
 import { Image, Text } from 'react-native'
 
 export default function TradePage() {
 	const { data } = useCryptoContext()
+	const { user } = useAppContext()
 
 	if (!data) return null
+
+	const addCryptoBalanceMutation = useAddCryptoBalance(user)
+
+	useEffect(() => {
+		if (data.id) {
+			addCryptoBalanceMutation.mutate(data.id)
+		}
+	}, [data.id])
 
 	return (
 		<StyledView>
@@ -26,7 +38,7 @@ export default function TradePage() {
 				<StyledView className="flex-1">
 					<Text className="text-xl text-white font-bold mb-1">{currencyFormat(data.current_price)}</Text>
 					<Text className={`${data.price_change_24h < 0 ? 'text-red-500' : 'text-green-500'} font-bold`}>
-						{currencyFormat(data.price_change_24h, true)} ({data.price_change_percentage_24h}%)
+						{currencyFormat(data.price_change_24h, true)} ({data.price_change_percentage_24h.toFixed(2)}%)
 					</Text>
 				</StyledView>
 
@@ -35,7 +47,7 @@ export default function TradePage() {
 
 			<Chart />
 
-			<StyledView className="border-2 border-gray-600 rounded-lg my-4" />
+			<StyledView className="border-2 border-gray-600 rounded-lg mb-4" />
 
 			<Trading />
 		</StyledView>

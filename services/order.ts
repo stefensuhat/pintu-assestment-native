@@ -1,6 +1,5 @@
 import type { UserType } from '@/components/app-context'
 import { supabase } from '@/lib/supabase'
-import type { CryptoDataInterface } from '@/types/crypto'
 import { type MutateOptions, useMutation } from '@tanstack/react-query'
 
 export type OrderFormValues = {
@@ -10,15 +9,24 @@ export type OrderFormValues = {
 	asset?: string
 	type: 'buy' | 'sell'
 }
+
 export function useExecuteOrder(
 	user: UserType,
-	cryptoId: CryptoDataInterface,
+	cryptoId: string,
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	options?: MutateOptions<any, any, any, any>,
 ) {
 	return useMutation({
 		mutationFn: async (data: OrderFormValues): Promise<{ success: false } | { success: true }> => {
 			try {
+				// get user data
+				const { data: userData } = await supabase
+					.from('balances')
+					.select('balance')
+					.eq('user_id', user.id)
+					.eq('asset', data.type === 'buy' ? 'IDR' : cryptoId)
+					.single()
+
 				await supabase
 					.from('orders')
 					.insert({
@@ -31,7 +39,18 @@ export function useExecuteOrder(
 					})
 					.select()
 
-				// get same price
+				// @ts-ignore
+				const updateBalance = userData.balance - Number.parseFloat(data.type === 'buy' ? data.total : data.amount)
+				await supabase
+					.from('balances')
+					.update({
+						balance: updateBalance,
+					})
+					.eq('asset', data.type === 'buy' ? 'IDR' : cryptoId)
+					.eq('user_id', user.id)
+					.select()
+
+				// get same order
 				const checkPrice = await supabase
 					.from('order_books')
 					.select('*')
@@ -40,6 +59,7 @@ export function useExecuteOrder(
 					.eq('asset', cryptoId)
 					.single()
 
+				// exists update. not exists insert
 				if (checkPrice.data) {
 					await supabase
 						.from('order_books')
@@ -49,6 +69,7 @@ export function useExecuteOrder(
 							price: data.price,
 							quantity: Number.parseFloat(data.amount) + checkPrice.data.quantity,
 						})
+						.eq('id', checkPrice.data.id)
 						.select()
 				} else {
 					await supabase.from('order_books').insert({
@@ -61,7 +82,6 @@ export function useExecuteOrder(
 
 				return { success: true }
 			} catch (error) {
-				console.log(error)
 				return { success: false }
 			}
 		},

@@ -31,7 +31,7 @@ export default function TableLists({ item }: TableListProps) {
 					<View
 						className={`py-1 px-2 rounded-md ${item.price_change_percentage_24h > 0 ? 'bg-green-500' : 'bg-red-500'}`}
 					>
-						<Text className="text-white text-xs">{`${item.price_change_percentage_24h.toFixed(2)}%`}</Text>
+						<Text className="text-white w-11 text-center text-xs">{`${item.price_change_percentage_24h.toFixed(2)}%`}</Text>
 					</View>
 				</View>
 			</Pressable>

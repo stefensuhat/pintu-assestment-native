@@ -14,14 +14,7 @@ interface InputFieldProps extends ControllerFieldState {
 export default function InputField({ classes, label, inputProps, error }: InputFieldProps) {
 	return (
 		<StyledView className={`space-y-1 ${classes?.root}`}>
-			<StyledText
-				tw={`
-			text-gray-300 text-xs,
-			${error && 'text-red-500'} 
-			${classes?.label}`}
-			>
-				{label}
-			</StyledText>
+			<StyledText tw={`text-gray-300 text-xs, ${error && 'text-red-500'} ${classes?.label}`}>{label}</StyledText>
 			<TextInput
 				{...inputProps}
 				onChangeText={(text) => {

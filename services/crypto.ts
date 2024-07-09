@@ -1,8 +1,8 @@
+import type { UserType } from '@/components/app-context'
 import request from '@/lib/request'
 import { supabase } from '@/lib/supabase'
-import data from '@/services/response.json'
 import type { CryptoDataInterface } from '@/types/crypto'
-import { type UseQueryOptions, useQuery } from '@tanstack/react-query'
+import { type UseMutationOptions, type UseQueryOptions, useMutation, useQuery } from '@tanstack/react-query'
 
 const keys = {
 	list: ['crypto', 'list'],
@@ -31,18 +31,15 @@ export const useGetCryptoList = ({ search, options }: { search: string; options?
 export const useGetCryptoDetail = (cryptoId: string) => {
 	return useQuery({
 		queryKey: [...keys.detail, cryptoId],
-		queryFn: async (): Promise<CryptoDataInterface | null> => {
-			//TODO: replace with real fetch
-
-			return await new Promise((resolve) => {
-				const findCrypto: CryptoDataInterface | null = data.find((item) => item.id === cryptoId) ?? null
-
-				setTimeout(() => {
-					return resolve(findCrypto)
-				}, 0)
-			})
+		queryFn: async (): Promise<CryptoDataInterface[] | null> => {
+			return await request.get(`/coins/markets?ids=${cryptoId}`, { params: { vs_currency: 'idr' } })
 		},
 		retry: 1,
+		select: (data) => {
+			if (data) return data[0]
+
+			return null
+		},
 	})
 }
 
@@ -72,21 +69,55 @@ export const useGetOrderBooks = (asset: string, key: number) => {
 				.from('order_books')
 				.select('*')
 				.gt('quantity', 0)
+				.eq('asset', asset)
 				.eq('order_type', 'buy')
-				.order('id', { ascending: false })
+				.order('price', { ascending: false })
 				.limit(7)
 
 			const { data: sellBooks } = await supabase
 				.from('order_books')
 				.select('*')
 				.gt('quantity', 0)
+				.eq('asset', asset)
 				.eq('order_type', 'sell')
-				.order('price', { ascending: false })
+				.order('price', { ascending: true })
 				.limit(7)
 
 			return { buyBooks, sellBooks }
 		},
 		retry: 1,
 		refetchInterval: false,
+	})
+}
+
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+export const useAddCryptoBalance = (user: UserType, options?: UseMutationOptions<any, any, any, any>) => {
+	return useMutation({
+		mutationFn: async (cryptoId: string): Promise<{ success: false } | { success: true }> => {
+			try {
+				const { data } = await supabase
+					.from('balances')
+					.select('*')
+					.eq('user_id', user.id)
+					.eq('asset', cryptoId)
+					.single()
+
+				if (!data) {
+					await supabase
+						.from('balances')
+						.upsert({
+							user_id: user.id,
+							asset: cryptoId,
+							balance: 1000,
+						})
+						.select()
+				}
+
+				return { success: true }
+			} catch (error) {
+				return { success: false }
+			}
+		},
+		...options,
 	})
 }

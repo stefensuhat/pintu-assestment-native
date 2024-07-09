@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import { useGetOrderBooks } from '@/services/crypto'
 import type { RealtimeChannel } from '@supabase/realtime-js'
 import { useEffect, useState } from 'react'
-import { Text, type TextProps, View, type ViewProps } from 'react-native'
+import { type TextProps, View, type ViewProps } from 'react-native'
 
 const Cell = (props: TextProps) => {
 	return <StyledText className="text-white text-[10px]" {...props} />
@@ -58,10 +58,12 @@ export default function OrderBook() {
 	}
 
 	return (
-		<View className="border-2 border-gray-600 rounded-lg p-1">
+		<View className="border-2 border-gray-600 min-w-[125px] rounded-lg p-1">
 			<Header>
 				<Heading>Price{'\n'}(IDR)</Heading>
-				<Heading className="text-right">Amount{'\n'}(BTC)</Heading>
+				<Heading className="text-right">
+					Amount{'\n'}({crypto.symbol.toUpperCase()})
+				</Heading>
 			</Header>
 
 			{data?.sellBooks?.map((book) => (
@@ -71,9 +73,6 @@ export default function OrderBook() {
 				</Row>
 			))}
 
-			<View className="border-2 border-l-0 border-r-0 border-gray-600 p-1">
-				<Text className="text-green-500 font-bold">{currencyFormat(1000000000, true)}</Text>
-			</View>
 			{data?.buyBooks?.map((book) => (
 				<Row className="flex-row justify-between" key={book.id}>
 					<Cell className="text-green-500">{currencyFormat(book.price, true)}</Cell>

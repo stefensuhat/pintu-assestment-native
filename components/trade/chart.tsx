@@ -25,7 +25,7 @@ export default function Chart() {
 	return (
 		<StyledView>
 			{query.isLoading ? null : query.data ? (
-				<StyledView className="h-fit rounded-lg overflow-hidden">
+				<StyledView className="rounded-lg overflow-hidden">
 					<GestureHandlerRootView>
 						<CandlestickChart.Provider data={query.data}>
 							<CandlestickChart className="p-0">

@@ -6,13 +6,17 @@ import InputField from '@/components/ui/input-field'
 import { currencyFormat } from '@/lib/helper'
 import { type OrderFormValues, useExecuteOrder } from '@/services/order'
 import { useGetUserBalance } from '@/services/user'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 
 const inactiveClasses = 'text-gray-600'
+const types: { label: string; value: 'buy' | 'sell'; color: string }[] = [
+	{ label: 'Buy', value: 'buy', color: 'green-500' },
+	{ label: 'Sell', value: 'sell', color: 'red-500' },
+]
 
 export default function OrderInput() {
-	const { control, handleSubmit, reset, getValues, setValue } = useForm<OrderFormValues>({
+	const { control, handleSubmit, setError, reset, getValues, setValue } = useForm<OrderFormValues>({
 		defaultValues: {
 			price: '0',
 			amount: '0',
@@ -21,10 +25,18 @@ export default function OrderInput() {
 		},
 	})
 
+	const [orderMode, setOrderMode] = useState<'buy' | 'sell'>('buy')
 	const { user } = useAppContext()
 	const { data: crypto } = useCryptoContext()
-	const { data: balances } = useGetUserBalance(user, crypto.id)
-	const orderMutation = useExecuteOrder(user, { onSuccess: () => reset() })
+	const { data: balances, refetch } = useGetUserBalance(user, crypto.id)
+	const orderMutation = useExecuteOrder(user, crypto.id, {
+		onSuccess: async () => {
+			await refetch()
+			reset()
+		},
+	})
+
+	console.log('data: ', balances)
 
 	const values = getValues()
 
@@ -57,41 +69,49 @@ export default function OrderInput() {
 
 	const handleChangeOrderMode = (type: 'buy' | 'sell') => {
 		setValue('type', type)
+		setOrderMode(type)
 	}
 
 	const onSubmit = (data: OrderFormValues) => {
+		if (data.type === 'buy') {
+			if (balances.idrBalance < Number.parseFloat(data.total)) {
+				setError('total', { message: 'Insufficient balance' })
+				return
+			}
+		}
+
+		if (data.type === 'sell') {
+			if (balances.cryptoBalance < Number.parseFloat(data.amount)) {
+				setError('amount', { message: 'Insufficient balance' })
+				return
+			}
+		}
+
 		orderMutation.mutate({ ...data, asset: crypto.id })
 	}
 
 	const getAvailableBalance = () => {
-		if (values.type === 'buy') {
+		if (orderMode === 'buy') {
 			return currencyFormat(balances.idrBalance)
 		}
 
-		return `${balances.cryptoBalance} ${crypto.symbol.toUpperCase()}`
+		return `${currencyFormat(balances.cryptoBalance, true)} ${crypto.symbol.toUpperCase()}`
 	}
 
 	return (
 		<StyledView className="flex flex-col justify-items-stretch space-y-8">
 			<StyledView className="flex-row">
-				<Button
-					label="Buy"
-					style={{ borderTopRightRadius: 0, borderBottomRightRadius: 0 }}
-					classes={{
-						root: `${values.type === 'buy' ? 'bg-green-500' : 'bg-gray-400'} flex-1`,
-						text: `${values.type !== 'buy' && inactiveClasses} font-bold`,
-					}}
-					onPress={() => handleChangeOrderMode('buy')}
-				/>
-				<Button
-					label="Sell"
-					style={{ borderTopLeftRadius: 0, borderBottomLeftRadius: 0 }}
-					classes={{
-						root: `${values.type === 'sell' ? 'bg-red-500' : 'bg-gray-400'} flex-1`,
-						text: `${values.type !== 'sell' && inactiveClasses} font-bold`,
-					}}
-					onPress={() => handleChangeOrderMode('sell')}
-				/>
+				{types.map((type) => (
+					<Button
+						key={type.value}
+						label={type.label}
+						classes={{
+							root: `${orderMode === type.value ? `bg-${type.color}` : 'bg-gray-400'} flex-1 mr-2`,
+							text: `${orderMode !== type.value && inactiveClasses} font-bold`,
+						}}
+						onPress={() => handleChangeOrderMode(type.value)}
+					/>
+				))}
 			</StyledView>
 
 			<StyledView className="space-y-4">

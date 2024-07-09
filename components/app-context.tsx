@@ -19,21 +19,24 @@ const AppContext = createContext<{
 })
 
 const AppContextProvider = ({ children }: { children: ReactNode }) => {
-	const [username, setUsername] = useState('')
-	const [user, setUser] = useState({ username: '', id: '' })
+	const [username, setUsername] = useState<string>('')
+	const [user, setUser] = useState<UserType>({ username: '', id: '' })
 	const [session, setSession] = useState<Session | null>(null)
 
 	const initializeUser = useCallback(async (session: Session | null) => {
 		setSession(session)
 
-		let username: string | null
+		let user: UserType
+		let username: string
 		if (session) {
 			username = session.user.user_metadata.user_name
 		} else {
 			username = await AsyncStorage.getItem('username')
 		}
 
-		if (!username) {
+		const { data } = await supabase.from('users').select('*').eq('username', username).single()
+
+		if (!data) {
 			username = `user${Date.now().toString().slice(-4)}`
 
 			const { data } = await supabase
@@ -44,23 +47,19 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
 			if (data) {
 				// insert basic balance from IDR
-				await supabase.from('balances').insert({ user_id: data.id, asset: 'IDR', balance: 0 }).select()
+				await supabase.from('balances').insert({ user_id: data.id, asset: 'IDR', balance: 10000000000000 }).select()
 				await AsyncStorage.setItem('user', JSON.stringify(data))
 				await AsyncStorage.setItem('username', username)
 			}
+		} else {
+			user = data
 		}
-
-		const { data: user } = await supabase.from('users').select('*').eq('username', username).single()
 
 		setUsername(username)
 		setUser(user)
 	}, [])
 
 	useEffect(() => {
-		supabase.auth.getSession().then(({ data: { session } }) => {
-			initializeUser(session).then(() => {})
-		})
-
 		const {
 			data: { subscription: authSubscription },
 		} = supabase.auth.onAuthStateChange((_event, session) => {
@@ -72,7 +71,9 @@ const AppContextProvider = ({ children }: { children: ReactNode }) => {
 		}
 	}, [initializeUser])
 
-	return <AppContext.Provider value={{ user, username, session }}>{children}</AppContext.Provider>
+	return (
+		<AppContext.Provider value={{ user, username, session }}>{user && username ? children : null}</AppContext.Provider>
+	)
 }
 
 const useAppContext = () => useContext(AppContext)

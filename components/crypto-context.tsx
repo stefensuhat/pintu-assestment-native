@@ -1,5 +1,6 @@
+import { useAppContext } from '@/components/app-context'
 import Loader from '@/components/ui/loader'
-import { useGetCryptoDetail } from '@/services/crypto'
+import { useAddCryptoBalance, useGetCryptoDetail } from '@/services/crypto'
 import type { CryptoDataInterface } from '@/types/crypto'
 import { Redirect, useLocalSearchParams } from 'expo-router'
 import { type ReactNode, createContext, useContext, useEffect } from 'react'
@@ -27,6 +28,7 @@ const CryptoContext = createContext<{
 const CryptoContextProvider = ({ children }: { children: ReactNode }) => {
 	const queryParams: Partial<{ crypto: string }> = useLocalSearchParams()
 
+	const { user } = useAppContext()
 	const { data, isError, isLoading } = useGetCryptoDetail(queryParams.crypto ?? 'bitcoin')
 
 	useEffect(() => {
