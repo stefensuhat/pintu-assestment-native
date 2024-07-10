@@ -1,0 +1,28 @@
+{
+  "cli": {
+    "version": ">= 10.1.1"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      channel: "development"
+    },
+    "preview": {
+      "distribution": "internal",
+      channel: "preview"
+    },
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_COINGECKO_API_URL":"https://api.coingecko.com/api/v3",
+        "EXPO_PUBLIC_COINGECKO_API_KEY":"CG-GPWasfr6Y2Ch5hFkVq38Jb6s",
+        "EXPO_PUBLIC_SUPABASE_KEY":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1eGt4am5oa25jZmZzaXNhZWpuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjAzMjUyNzYsImV4cCI6MjAzNTkwMTI3Nn0.FKioOuwUTr1hKXhRpaI2_4NG4KDLQ-zC2Pr70L3umv0",
+        "EXPO_PUBLIC_SUPABASE_URL":"https://xuxkxjnhkncffsisaejn.supabase.co",
+      },
+      channel: "production"
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}

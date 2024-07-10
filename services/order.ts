@@ -27,6 +27,34 @@ export function useExecuteOrder(
 					.eq('asset', data.type === 'buy' ? 'IDR' : cryptoId)
 					.single()
 
+				// get the existing order on price range
+				// ie: buy: 100k idr on price 200k. get all available sell orders on price 0-200k
+				// ie: sell: 100k idr on price 200k. get all available buy orders on price 200k-inf
+				const getPriceRange = await supabase
+					.from('order_books')
+					.select('*')
+					.eq('order_type', data.type === 'buy' ? 'sell' : 'buy')
+					.eq('asset', cryptoId)
+					.filter('price', data.type === 'buy' ? 'lte' : 'gte', data.price)
+					.order('price', { ascending: false })
+
+				if (getPriceRange.data) {
+					// sum all price range quantity to get same amount of quantity
+					let sumQuantity = 0
+					const pendingOrderIds = []
+					for (const order of getPriceRange.data) {
+						sumQuantity += order.quantity
+
+						if (sumQuantity >= Number.parseFloat(data.amount)) {
+							break
+						}
+
+						pendingOrderIds.push(order.id)
+					}
+
+					return
+				}
+
 				await supabase
 					.from('orders')
 					.insert({
